@@ -17,13 +17,16 @@ const SalesStore = {
   fromRow(r) {
     return { id: r.id, templateId: r.template_id, name: r.name, phone: r.phone || '', stage: r.stage, stageAt: r.stage_at,
       lastActivityAt: r.last_activity_at, fields: r.fields || {}, birthday: r.birthday, owner: r.owner, source: r.source,
-      nextContact: r.next_contact_at ? { date: r.next_contact_at, task: r.next_contact_task || '' } : null };
+      nextContact: r.next_contact_at ? { date: r.next_contact_at, task: r.next_contact_task || '' } : null,
+      org: r.org || '', title: r.title || '', email: r.email || '', address: r.address || '' };
   },
   toRow(c) {
     return { id: c.id, rep_id: this.me(), template_id: c.templateId, name: c.name, phone: c.phone || null, stage: c.stage,
       stage_at: c.stageAt, last_activity_at: c.lastActivityAt, fields: c.fields || {}, birthday: c.birthday || null,
       owner: c.owner || 'personal', source: c.source || 'manual',
-      next_contact_at: (c.nextContact && c.nextContact.date) || null, next_contact_task: (c.nextContact && c.nextContact.task ? String(c.nextContact.task).slice(0, 80) : null) };
+      next_contact_at: (c.nextContact && c.nextContact.date) || null, next_contact_task: (c.nextContact && c.nextContact.task ? String(c.nextContact.task).slice(0, 80) : null),
+      org: c.org ? String(c.org).slice(0, 60) : null, title: c.title ? String(c.title).slice(0, 60) : null,
+      email: c.email ? String(c.email).slice(0, 80) : null, address: c.address ? String(c.address).slice(0, 120) : null };
   },
   actFromRow(a) { return { id: a.id, customerId: a.customer_id, kind: a.kind, date: a.date, by: a.by, body: a.body || {} }; },
 
