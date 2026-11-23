@@ -65,6 +65,7 @@ const Hq = {
             <a class="on" href="#">오늘 현황</a>
             <a href="#" data-hq="assign">고객 배정</a>
             <a href="#" data-hq="route">방문 루트 보내기</a>
+            <a href="#" data-hq="invite">팀원 초대 (회사 코드)</a>
             <a href="secretary.html">세일즈톡 · 일정 (기존 화면)</a>
           </nav>
           <p class="hq-tpl">${esc(t.name)} 템플릿 · 성과 단계 '${esc(Templates.winStage(t))}'</p>
@@ -72,7 +73,7 @@ const Hq = {
         <main class="hq-main">
           <div class="hq-head">
             <div><div class="hq-muted">${esc(longDate)}</div><h1>오늘 현황</h1></div>
-            <div class="hq-btns"><button class="hq-btn" data-hq="assign">고객 배정</button><button class="hq-btn hq-dark" data-hq="route">방문 루트 보내기</button></div>
+            <div class="hq-btns"><button class="hq-btn" data-hq="invite">팀원 초대</button><button class="hq-btn" data-hq="assign">고객 배정</button><button class="hq-btn hq-dark" data-hq="route">방문 루트 보내기</button></div>
           </div>
           <div class="hq-kpis">
             <div class="hq-kpi dark"><span>오늘 방문</span><b>${done.length} / ${todayAll.length}</b><small>끝남 / 계획</small></div>
@@ -156,12 +157,34 @@ const Hq = {
     };
   },
 
+  /** 팀원 초대: 회사 코드 보기 · 복사 · 안내문 복사 · 새로 받기 */
+  async openInvite(renew) {
+    const m = this.modal(`<h2>팀원 초대</h2><p class="hq-muted">코드를 불러오는 중…</p>`);
+    let code;
+    try { code = await Store.joinCode(!!renew); }
+    catch (e) { m.querySelector('.hq-modal').innerHTML = `<h2>팀원 초대</h2><p class="hq-err">${U.esc(e.message || e)}</p><div class="hq-foot"><button class="hq-btn" data-hq="close">닫기</button></div>`; return; }
+    const cfg = window.CEOP_CONFIG && CEOP_CONFIG.APP_URL, app = /^https?:/.test(cfg || '') ? cfg : 'https://ktj8824-stack.github.io/salesplanner-app/';
+    const msg = `[세일즈플래너] 우리 팀에 들어와 주세요.\n① 앱 열기: ${app}\n② '회사 코드로 시작'을 누르고 코드 ${code} 를 넣어 주세요.\n가입하면 제 팀으로 바로 연결돼요.`;
+    m.querySelector('.hq-modal').innerHTML = `<h2>팀원 초대</h2>
+      <p class="hq-muted">영업사원이 앱에서 '회사 코드로 시작'을 누르고 이 코드를 넣으면, 가입과 동시에 내 팀으로 연결돼요.</p>
+      <div class="hq-code">${U.esc(code)}</div>
+      <div class="hq-btns"><button class="hq-btn" data-copy="code">코드 복사</button><button class="hq-btn hq-dark" data-copy="msg">초대 문자 복사</button></div>
+      <pre class="hq-invite">${U.esc(msg)}</pre>
+      <p class="hq-muted">코드가 밖으로 새면 새로 받으세요. 옛 코드로는 더는 가입할 수 없고, 이미 들어온 팀원은 그대로예요.</p>
+      <div class="hq-foot"><button class="hq-btn" data-renew>새 코드 받기</button><button class="hq-btn" data-hq="close">닫기</button></div>`;
+    m.querySelectorAll('[data-copy]').forEach(b => b.addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText(b.dataset.copy === 'code' ? code : msg); U.toast('복사했어요'); } catch { U.toast('복사하지 못했어요. 직접 골라서 복사해 주세요'); }
+    }));
+    m.querySelector('[data-renew]').addEventListener('click', () => { if (confirm('새 코드를 받을까요? 지금 코드로는 더 이상 가입할 수 없어요.')) this.openInvite(true); });
+  },
+
   onClick(e) {
     const el = e.target.closest('[data-hq]'); if (!el) { if (e.target.classList.contains('hq-mback')) this.close(); return; }
     e.preventDefault();
     const k = el.dataset.hq;
     if (k === 'assign') this.openAssign();
     else if (k === 'route') this.openRoute();
+    else if (k === 'invite') this.openInvite();
     else if (k === 'close') this.close();
     else if (k === 'exitdemo') Store.exitDemo();
   },

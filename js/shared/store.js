@@ -276,6 +276,17 @@ const Store = {
     return data;
   },
   async signUp(form) { return this._account({ action: 'signup', ...form }); },
+  /** 회사 코드로 영업사원 가입 · 혼자 쓰는 영업사원 가입 (로그인 전) */
+  async joinWithCode(form) { return this._account({ action: 'join', ...form }); },
+  async signUpPersonal(form) { return this._account({ action: 'signup_personal', ...form }); },
+  /** 본사 · 팀장의 회사 코드 (renew: 새로 받기). 데모는 이 브라우저 안에서만 */
+  async joinCode(renew) {
+    if (this.mode === 'supabase') return (await this._account({ action: 'join_code', renew: !!renew })).code;
+    const ABC = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+    let c = null; try { c = localStorage.getItem('sp_demo_code'); } catch { /* */ }
+    if (!c || renew) { c = Array.from({ length: 8 }, () => ABC[Math.floor(Math.random() * ABC.length)]).join(''); c = c.slice(0, 4) + '-' + c.slice(4); try { localStorage.setItem('sp_demo_code', c); } catch { /* */ } }
+    return c;
+  },
   /** 회원 탈퇴 — 비서 · 기사는 내 계정, 대표는 회사 전체를 지워요 (서버 sp-account delete_self) */
   async deleteMe() {
     if (this.mode !== 'supabase') throw new Error('데모에서는 지울 계정이 없어요. 실제 계정에서는 여기서 바로 탈퇴할 수 있어요.');
@@ -351,9 +362,9 @@ const Store = {
     // 세일즈플래너에 등록된 계정인지, 이 화면에 맞는 역할인지 확인 (같은 서버의 다른 앱 계정은 막힘)
     const me = await this.client.from('sp_profiles').select('role, company_id, login_id').eq('id', user.id).maybeSingle();
     if (me.error) throw me.error;
-    if (!me.data) throw new Error('세일즈플래너 계정이 아니에요. 회사에서 받은 아이디로 로그인해 주세요.');
+    if (!me.data) throw new Error('세일즈플래너 계정이 아니에요. 가입한 아이디로 로그인해 주세요.');
     if (me.data.role !== this.role) {
-      const where = { ceo: '대표 앱', secretary: '비서 웹', driver: '기사님 배차표' }[me.data.role];
+      const where = { ceo: '영업사원 앱', secretary: '본사 웹', driver: '기사님 배차표' }[me.data.role];
       throw new Error(`이 아이디는 ${where}용이에요.`);
     }
     this.companyId = me.data.company_id; this.myLogin = me.data.login_id;
@@ -362,10 +373,11 @@ const Store = {
       const { data, error } = await this.client.from('sp_links').select('ceo_id').eq('member_id', user.id).eq('role', this.role).limit(1);
       if (error) throw error;
       this.ceoId = data && data[0] ? data[0].ceo_id : null;
-      if (!this.ceoId) throw new Error('연결된 대표가 없어요. 관리자에게 연결을 요청해 주세요.');
+      // 본사 · 팀장은 팀원이 아직 없어도 들어올 수 있어요 (회사 코드로 팀원을 받음)
+      if (!this.ceoId && this.role !== 'secretary') throw new Error('연결된 팀장이 없어요. 본사에 연결을 요청해 주세요.');
     }
     await this._reload();
-    this.client.channel('ceop-' + this.ceoId)
+    if (this.ceoId) this.client.channel('ceop-' + this.ceoId)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'sp_schedules', filter: `ceo_id=eq.${this.ceoId}` }, () => this._reload().then(() => this._emit()))
       .on('postgres_changes', { event: '*', schema: 'public', table: 'sp_messages', filter: `ceo_id=eq.${this.ceoId}` }, () => this._reload().then(() => this._emit()))
       .subscribe();

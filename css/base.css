@@ -173,3 +173,6 @@ body.sec .auth-start::before { height: 44vh; }
 .btn.danger:disabled { opacity: .45; }
 .me-foot button[data-withdraw], .drv-wd { background: none; border: 0; padding: 0; color: inherit; text-decoration: underline; font: inherit; cursor: pointer; }
 .drv-wd { margin-top: 6px; color: var(--slate); }
+.auth-code { font-family: ui-monospace, Menlo, monospace; letter-spacing: 3px; text-transform: uppercase; }
+input.auth-code { font-size: 20px; text-align: center; }
+.empty-note { margin: 24px 16px; padding: 20px; border-radius: 16px; background: var(--card, #fff); text-align: center; line-height: 1.6; }

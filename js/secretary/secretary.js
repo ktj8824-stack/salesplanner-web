@@ -1,9 +1,9 @@
 /* =========================================
    세일즈플래너 — 비서실 관제 (PC 웹)
    로드플래너 본사 관제 포털과 같은 구성:
-   왼쪽 사이드바(담당 대표 · 분류 필터) / 위 헤더(배차 알림 · 비서톡 · 새 일정 등록)
+   왼쪽 사이드바(담당 대표 · 분류 필터) / 위 헤더(배차 알림 · 세일즈톡 · 새 일정 등록)
    오늘 현황(모두 오늘 기준) / 캘린더 패널(월간 · 주간 · 당일 동선 · 확인 대기)
-   일정 등록은 모달, 비서톡은 오른쪽 서랍.
+   일정 등록은 모달, 세일즈톡은 오른쪽 서랍.
    ========================================= */
 const Sec = {
   view: 'month',          // month | week | day | review
@@ -30,7 +30,7 @@ const Sec = {
     this.seenUrgent = Number(localStorage.getItem('CEOP_SEEN_SEC_URGENT') || 0);
     const root = document.getElementById('root');
     root.innerHTML = `
-      ${Store.mode === 'demo' ? `<div class="demo-bar">데모 모드예요. 같은 브라우저에서 <a href="${U.esc(CEOP_CONFIG.APP_URL)}" target="_blank">대표 앱</a>을 열면 양쪽에 바로 반영돼요.${Store.forcedDemo ? ' · <button data-exitdemo>데모 끝내기</button>' : ''}</div>` : ''}
+      ${Store.mode === 'demo' ? `<div class="demo-bar">데모 모드예요. 같은 브라우저에서 <a href="${U.esc(CEOP_CONFIG.APP_URL)}" target="_blank">영업사원 앱</a>을 열면 양쪽에 바로 반영돼요.${Store.forcedDemo ? ' · <button data-exitdemo>데모 끝내기</button>' : ''}</div>` : ''}
       <div class="shell">
         <aside class="side" id="side"></aside>
         <main class="main">
@@ -65,7 +65,7 @@ const Sec = {
   day(ymd) { return this.visible(Store.byDate(ymd)).filter(s => s.status !== 'cancelled'); },
   newMsgs() { return Store.messages().slice(this.seenMsgs).filter(m => m.from === 'ceo').length; },
   pendingAll() { return Store.list().filter(s => !s.masked && !s.ackAt && s.status !== 'cancelled' && s.date >= U.today()).sort((a, b) => (a.date + a.start).localeCompare(b.date + b.start)); },
-  conflictsOn(ymd) { return Backtime.conflictsOn(Store.list(), ymd).filter(w => !(w.a.masked && w.b.masked)); },   // 대표 개인 일정끼리는 비서가 고칠 일이 아님
+  conflictsOn(ymd) { return Backtime.conflictsOn(Store.list(), ymd).filter(w => !(w.a.masked && w.b.masked)); },   // 영업사원 개인 일정끼리는 비서가 고칠 일이 아님
   dateShort(ymd) { const d = U.at(ymd, '00:00'); return `${d.getMonth() + 1}월 ${d.getDate()}일 (${U.WEEK[d.getDay()]})`; },
   whenLabel(s) {
     const rel = s.date === U.today() ? '오늘' : s.date === U.addDays(U.today(), 1) ? `내일 (${U.WEEK[U.at(s.date, '00:00').getDay()]})` : this.dateShort(s.date);
@@ -92,7 +92,7 @@ const Sec = {
     el.innerHTML = `
       <div class="brand"><img src="icon.svg" alt="" width="36" height="36"><div><b>세일즈플래너</b><small>비서실 일정 관제</small></div></div>
       <div class="ceo-card"><span class="avatar">${U.esc((p.name || '대').slice(0, 1))}</span>
-        <span class="side-txt"><b>${U.esc(p.name || '대표')}님</b><small>담당 ${U.esc(p.secretaryName || '비서')} · ${U.esc(p.driverName || '기사')}</small></span></div>
+        <span class="side-txt"><b>${U.esc(p.name || '영업사원')}님</b><small>담당 ${U.esc(p.secretaryName || '팀장')} · ${U.esc(p.driverName || '기사')}</small></span></div>
       <div class="side-sec grow"><div class="side-title">분류 · 앞으로 30일</div>
         <div class="side-list">
           ${item('all', '전체 일정', upcoming.length, '')}
@@ -121,7 +121,7 @@ const Sec = {
     back.innerHTML = `<div class="modal free-info" role="dialog" aria-label="이용 안내" style="max-width:460px;width:100%">
       <div class="ed-head"><div><h3>이용 안내</h3><p class="muted small">${U.esc(Plan.FREE_TEXT)}</p></div><button class="icon-btn" data-close aria-label="닫기">${Icon.svg('x', 18)}</button></div>
       <div class="ed-body" style="display:block"><p style="margin:0 0 10px"><b>${U.esc(Plan.FREE_TEXT)}</b>로 모든 기능을 쓸 수 있어요.</p>
-        <ul style="margin:0 0 12px;padding-left:18px;line-height:1.7"><li>비서 웹 · 대표 앱 · 기사님 계정</li><li>AI 비서 — 말로 일정 등록 · 변경 · 미루기</li><li>역산 알림 · 동선 확인 · 비서톡 · 손님 초대장</li></ul>
+        <ul style="margin:0 0 12px;padding-left:18px;line-height:1.7"><li>본사 웹 · 영업사원 앱 · 기사님 계정</li><li>AI 비서 — 말로 일정 등록 · 변경 · 미루기</li><li>역산 알림 · 동선 확인 · 세일즈톡 · 손님 초대장</li></ul>
         <p class="muted small" style="margin:0">무료 기간이 끝나기 전에 요금과 결제 방법을 미리 알려 드려요. 그때까지 결제 정보는 받지 않아요.</p></div>
       <div class="ed-foot"><button class="btn primary" data-close>확인</button></div></div>`;
     document.body.appendChild(back);
@@ -172,14 +172,14 @@ const Sec = {
   },
 
   // ───────── 계정 관리 (기사 · 비서 아이디 만들기, 비밀번호 재설정, 삭제) ─────────
-  ROLE_LABEL: { ceo: '대표', secretary: '비서', driver: '기사' },
+  ROLE_LABEL: { ceo: '영업사원', secretary: '본사 · 팀장', driver: '기사' },
   openAccounts() {
     const back = document.createElement('div');
     back.className = 'modal-back';
     const paint = (msg = '') => {
       const list = Store.members();
       back.innerHTML = `<div class="modal accounts" role="dialog" aria-label="계정 관리">
-        <div class="ed-head"><div><h3>계정 관리</h3><p class="muted small">우리 회사 계정 ${list.length}개 · 기사님 · 비서님 아이디를 여기서 만들어요</p></div>
+        <div class="ed-head"><div><h3>계정 관리</h3><p class="muted small">우리 회사 계정 ${list.length}개 · 영업사원 · 팀장 아이디를 여기서 만들어요. 영업사원은 회사 코드로 직접 가입할 수도 있어요</p></div>
           <button class="icon-btn" data-close aria-label="닫기">${Icon.svg('x', 18)}</button></div>
         <div class="ac-body">
           <ul class="ac-list">${list.map(m => `<li>
@@ -191,13 +191,13 @@ const Sec = {
           <form class="ac-add" id="acAdd">
             <b>새 계정 만들기</b>
             <div class="ac-grid">
-              <label>역할<select name="role"><option value="driver">기사</option><option value="secretary">비서</option></select></label>
+              <label>역할<select name="role"><option value="ceo">영업사원</option><option value="secretary">팀장</option></select></label>
               <label>이름<input name="name" required autocomplete="off"></label>
               <label>아이디<input name="loginId" required autocapitalize="none" spellcheck="false" placeholder="영어·숫자 3~30자" autocomplete="off"></label>
               <label>임시 비밀번호<input name="password" required minlength="8" placeholder="8자 이상" autocomplete="off"></label>
               <label><span>휴대폰 <span class="muted">(선택)</span></span><input name="phone" type="tel" placeholder="010-0000-0000" autocomplete="off"></label>
             </div>
-            <p class="small muted" style="margin:0">기사님은 배차 알림 문자 속 링크(배차표)에서 대기 · 출발 · 도착을 눌러 알려 줘요.</p>
+            <p class="small muted" style="margin:0">여기서 만든 영업사원은 내 팀으로 바로 연결돼요.</p>
             <div class="ac-foot"><span class="small ac-msg" role="status">${msg}</span><button class="btn primary" type="submit">계정 만들기</button></div>
           </form>
         </div></div>`;
@@ -237,11 +237,11 @@ const Sec = {
     const n = this.newMsgs();
     const el = document.getElementById('head');
     el.innerHTML = `
-      <div><h1>대표 일정 관제</h1><p>${U.esc(p.name || '대표')}님 일정 · 담당 ${U.esc(p.secretaryName || '비서')}</p></div>
+      <div><h1>영업사원 일정</h1><p>${U.esc(p.name || '영업사원')}님 일정 · 담당 ${U.esc(p.secretaryName || '팀장')}</p></div>
       <div class="head-actions">
         <button class="btn" data-brief>${Icon.svg('file', 16)} 브리핑 보내기</button>
         <button class="btn" data-dispatch>${Icon.svg('car', 16)} 기사님께 배차 알림</button>
-        <button class="btn" data-chat>${Icon.svg('chat', 16)} 비서톡${n ? `<span class="pill-count">${n}</span>` : ''}</button>
+        <button class="btn" data-chat>${Icon.svg('chat', 16)} 세일즈톡${n ? `<span class="pill-count">${n}</span>` : ''}</button>
         <button class="btn primary" data-new>${Icon.svg('plus', 16)} 새 일정 등록</button>
       </div>`;
     el.querySelector('[data-brief]').addEventListener('click', () => this.openBrief());
@@ -255,7 +255,7 @@ const Sec = {
     const urgent = Store.messages().filter(m => m.from === 'ceo' && m.urgent);
     if (urgent.length <= this.seenUrgent) { el.innerHTML = ''; return; }
     const m = urgent[urgent.length - 1];
-    el.innerHTML = `<div class="urgent">${Icon.svg('siren', 20)}<b>대표님 긴급 요청</b><span>${U.esc(m.body)} · ${U.hm(new Date(m.at))}</span>
+    el.innerHTML = `<div class="urgent">${Icon.svg('siren', 20)}<b>영업사원 긴급 요청</b><span>${U.esc(m.body)} · ${U.hm(new Date(m.at))}</span>
       <a class="btn" href="${U.telLink(Store.profile().ceoPhone)}">전화하기</a><button class="btn" data-seen>확인함</button></div>`;
     el.querySelector('[data-seen]').addEventListener('click', () => {
       this.seenUrgent = urgent.length; localStorage.setItem('CEOP_SEEN_SEC_URGENT', String(urgent.length)); this.renderUrgent();
@@ -279,7 +279,7 @@ const Sec = {
     const sent = msgs.some(m => m.from === 'secretary' && m.ref === 'brief:' + t1);
     let skip = ''; try { skip = localStorage.getItem('CEOP_BRIEF_SKIP') || ''; } catch { /* */ }
     if (now.getHours() >= 18 && tomorrow.length && !sent && skip !== t1) {
-      rows.push(`<div class="alert-band brief">${Icon.svg('file', 18)}<span><b>내일 브리핑을 아직 안 보냈어요</b><small>내일 일정 ${tomorrow.length}건 · 보내면 대표님 앱에 '모두 확인'이 떠요</small></span>
+      rows.push(`<div class="alert-band brief">${Icon.svg('file', 18)}<span><b>내일 브리핑을 아직 안 보냈어요</b><small>내일 일정 ${tomorrow.length}건 · 보내면 영업사원 앱에 '모두 확인'이 떠요</small></span>
         <button class="btn primary" data-briefnow>브리핑 보내기</button><button class="btn quiet" data-briefskip>오늘은 안 보내기</button></div>`);
     }
     el.innerHTML = rows.join('');
@@ -306,7 +306,7 @@ const Sec = {
     el.innerHTML = `<div class="panel-head"><h2>오늘 현황</h2><span class="muted small">${this.dateShort(U.today())} ${U.hm(now)} 기준</span></div>
       <div class="stats">
         ${stat('오늘 일정', today.length, today.length - mine.length ? `개인 일정 ${today.length - mine.length}건 포함` : '개인 일정 없음', '', 'day')}
-        ${stat('대표 확인', `${acked} / ${mine.length}`, '개인 일정 제외', 'ok', '')}
+        ${stat('영업사원 확인', `${acked} / ${mine.length}`, '개인 일정 제외', 'ok', '')}
         ${stat('확인 대기', waiting.length, waiting.length ? U.esc(waiting.map(s => s.title).join(' · ')) : '모두 확인됨', waiting.length ? 'warn' : '', 'review')}
         ${stat('이동 경고', warns.length, warns.length ? U.esc(short(warns[0])) : '문제 없음', warns.length ? 'signal' : '', 'day')}
         ${stat('다음 출발', next ? U.hm(next.p.leaveAt) : '—', next ? U.esc(next.s.title) : '오늘 남은 이동 없음', 'brass', '')}
@@ -344,7 +344,7 @@ const Sec = {
         ${this.filter !== 'all' ? `<span class="badge">${Backtime.CATEGORIES[this.filter].label}만 보기</span>` : ''}
         <div class="tabs" role="tablist">${this.VIEWS.map(([k, l]) => `<button role="tab" aria-selected="${this.view === k}" class="${this.view === k ? 'on' : ''}" data-view="${k}">${l}${k === 'review' && pend ? `<span class="tab-count">${pend}</span>` : ''}</button>`).join('')}</div>
       </div>
-      ${this.view === 'month' || this.view === 'week' ? `<p class="legend-line"><i class="dot amber"></i> 대표 확인 대기 <i class="dot private"></i> 대표 개인 일정 ('바쁨')</p>` : ''}
+      ${this.view === 'month' || this.view === 'week' ? `<p class="legend-line"><i class="dot amber"></i> 영업사원 확인 대기 <i class="dot private"></i> 영업사원 개인 일정 ('바쁨')</p>` : ''}
       <div class="cal-body">${body}</div>`;
     el.querySelectorAll('[data-move]').forEach(b => b.addEventListener('click', () => this.move(Number(b.dataset.move))));
     el.querySelectorAll('[data-view]').forEach(b => b.addEventListener('click', () => { this.view = b.dataset.view; this.renderCal(); }));
@@ -353,7 +353,7 @@ const Sec = {
     el.querySelectorAll('[data-dayof]').forEach(b => b.addEventListener('click', e => { e.stopPropagation(); this.cur = b.dataset.dayof; this.view = 'day'; this.renderCal(); }));
     el.querySelectorAll('[data-seenadj]').forEach(b => b.addEventListener('click', async () => {
       const t = Store.get(b.dataset.seenadj);
-      try { await Store.send(`'${t ? t.title : '일정'}' 조정 요청 확인했어요. 바로 조정할게요.`, { ref: b.dataset.seenadj }); U.toast('대표님께 확인했다고 알렸어요'); }
+      try { await Store.send(`'${t ? t.title : '일정'}' 조정 요청 확인했어요. 바로 조정할게요.`, { ref: b.dataset.seenadj }); U.toast('영업사원에게 확인했다고 알렸어요'); }
       catch (err) { U.toast('보내지 못했어요: ' + (err.message || err)); }
     }));
     el.querySelectorAll('[data-shift]').forEach(b => b.addEventListener('click', () => this.shiftSchedule(b.dataset.shift, b.dataset.to, b.dataset.clash)));
@@ -363,8 +363,8 @@ const Sec = {
 
   pill(s) {
     if (s.masked) return `<div class="ev masked"><span class="num">${s.start}</span>${Icon.svg('lock', 12)} 바쁨</div>`;
-    return `<button class="ev cat-${s.category} ${s.ackAt ? '' : 'unacked'}" data-open="${s.id}" title="${U.esc(s.title)}${s.ackAt ? '' : ' · 대표 확인 대기'}">
-      <span class="num">${s.start}</span><span class="ev-t">${U.esc(s.title)}</span>${s.ackAt ? '' : '<i class="dot amber" aria-label="대표 확인 대기"></i>'}</button>`;
+    return `<button class="ev cat-${s.category} ${s.ackAt ? '' : 'unacked'}" data-open="${s.id}" title="${U.esc(s.title)}${s.ackAt ? '' : ' · 영업사원 확인 대기'}">
+      <span class="num">${s.start}</span><span class="ev-t">${U.esc(s.title)}</span>${s.ackAt ? '' : '<i class="dot amber" aria-label="영업사원 확인 대기"></i>'}</button>`;
   },
 
   monthView() {
@@ -452,7 +452,7 @@ const Sec = {
         `<i class="g-main ${s.masked ? 'masked' : `cat-${s.category}`}" style="left:${pos(p.startAt)}%;width:${Math.max(.8, pos(p.endAt) - pos(p.startAt))}%" title="${U.esc(s.masked ? '바쁨' : s.title)}">${pos(p.endAt) - pos(p.startAt) >= 9 ? `<span>${s.masked ? '바쁨' : U.esc(s.title)}</span>` : ''}</i>`;
       const steps = go ? p.items.filter(it => it.kind !== 'end').map(it => `<li class="k-${it.kind}"><b class="num">${U.hm(it.at)}</b>${Icon.kind(it.kind, 14)}<span>${U.esc(it.title)}</span></li>`).join('') : '';
       return `<div class="g-row">
-        <div class="g-label">${s.masked ? `<span class="num">${s.start}–${s.end}</span><b class="masked-t">${Icon.svg('lock', 14)} 대표 개인 일정</b>`
+        <div class="g-label">${s.masked ? `<span class="num">${s.start}–${s.end}</span><b class="masked-t">${Icon.svg('lock', 14)} 영업사원 개인 일정</b>`
           : `<span class="num">${s.start}–${s.end}</span><button class="g-title" data-open="${s.id}">${U.esc(s.title)}</button>
              <span class="muted small">${U.esc(s.location || '')}${go ? ` · ${Backtime.MODES[s.mode].label}` : ''}</span>
              ${s.ackAt ? '<span class="badge ok">확인함</span>' : '<span class="badge warn">확인 대기</span>'}`}</div>
@@ -467,9 +467,9 @@ const Sec = {
       const asked = !!req;
       const seen = req && msgs.some(m => m.from === 'secretary' && m.ref === w.b.id && String(m.at) > String(req.at));
       return `<div class="fix">${Icon.svg('alert', 20)}<div><b>${U.esc(w.msg)}</b>
-        <span>${asked ? '대표님이 앱에서 조정을 요청했어요 · ' : ''}${canFix ? (fix.clash
+        <span>${asked ? '영업사원이 앱에서 조정을 요청했어요 · ' : ''}${canFix ? (fix.clash
           ? `${fix.to}${this.ro(fix.to)} 미루면 '${U.esc(fix.clash.masked ? '개인 일정' : fix.clash.title)}'${Backtime.wa(fix.clash.masked ? '개인 일정' : fix.clash.title)} 새로 겹쳐요${fix.free ? ` · ${fix.free}${this.ro(fix.free)} 미루면 다른 일정과 안 겹쳐요` : ''}`
-          : `'${U.esc(w.b.title)}' 시작을 ${fix.to}${this.ro(fix.to)} ${fix.add}분 미루면 해결돼요`) : '대표 개인 일정과 겹쳐요'}</span></div>
+          : `'${U.esc(w.b.title)}' 시작을 ${fix.to}${this.ro(fix.to)} ${fix.add}분 미루면 해결돼요`) : '영업사원 개인 일정과 겹쳐요'}</span></div>
         ${asked && !seen ? `<button class="btn" data-seenadj="${w.b.id}">확인했어요</button>` : ''}${canFix ? (fix.clash
           ? `${fix.free ? `<button class="btn signal" data-shift="${w.b.id}" data-to="${fix.free}">${U.esc(w.b.title)} ${fix.free}${this.ro(fix.free)} 미루기 <small>(다른 일정과 안 겹침)</small></button>` : ''}<button class="btn" data-shift="${w.b.id}" data-to="${fix.to}" data-clash="${U.esc(fix.clash.masked ? '개인 일정' : fix.clash.title)}">${fix.to}${this.ro(fix.to)} <small>('${U.esc(fix.clash.masked ? '개인 일정' : fix.clash.title)}'${Backtime.wa(fix.clash.masked ? '개인 일정' : fix.clash.title)} 겹침)</small></button>`
           : `<button class="btn signal" data-shift="${w.b.id}" data-to="${fix.to}">${U.esc(w.b.title)} ${fix.to}${this.ro(fix.to)} 미루기</button>`) : ''}</div>`;
@@ -482,11 +482,11 @@ const Sec = {
     const s = Store.get(id); if (!s) return;
     const dur = U.diffMin(U.at(s.date, s.end), U.at(s.date, s.start));
     const end = U.hm(U.addMin(U.at(s.date, to), dur));
-    if (!confirm(`'${s.title}' 시작을 ${s.start} → ${to}${this.ro(to)} 미룰까요? (종료 ${end})${clash ? `\n주의: 이 시각은 '${clash}'${Backtime.wa(clash)} 겹쳐요.` : ''}\n대표님께 다시 확인을 요청해요.`)) return;
+    if (!confirm(`'${s.title}' 시작을 ${s.start} → ${to}${this.ro(to)} 미룰까요? (종료 ${end})${clash ? `\n주의: 이 시각은 '${clash}'${Backtime.wa(clash)} 겹쳐요.` : ''}\n영업사원에게 다시 확인을 요청해요.`)) return;
     try {
       await Store.upsert({ ...s, start: to, end });
       await Store.send(`'${s.title}' 시작을 ${to}${this.ro(to)} 미뤘어요. 앱에서 확인 부탁드려요.`, { ref: s.id });
-      U.toast(`${to}${this.ro(to)} 미뤘어요. 대표님께 알렸어요`);
+      U.toast(`${to}${this.ro(to)} 미뤘어요. 영업사원에게 알렸어요`);
       if (s.briefing && s.briefing.who) this.openDraft(s, Drafts.change(s, { date: s.date, start: s.start }, { date: s.date, start: to }, Store.profile()));
     } catch (err) { U.toast('바꾸지 못했어요: ' + (err.message || err)); }
   },
@@ -494,22 +494,22 @@ const Sec = {
   reviewView() {
     const items = this.pendingAll();
     const todayN = items.filter(s => s.date === U.today()).length;
-    if (!items.length) return `<div class="empty-big">${Icon.svg('checkCircle', 28)}<p>대표님이 모든 일정을 확인했어요.</p></div>`;
+    if (!items.length) return `<div class="empty-big">${Icon.svg('checkCircle', 28)}<p>영업사원이 모든 일정을 확인했어요.</p></div>`;
     const warnIds = new Map();
     [...new Set(items.map(s => s.date))].forEach(d => this.conflictsOn(d).forEach(w => warnIds.set(w.b.id, w)));
     const rows = items.map(s => {
       const w = warnIds.get(s.id);
       const adjust = Store.messages().some(m => m.from === 'ceo' && m.ref === s.id && m.body.includes('조정'));
-      const note = w ? `이동 시간 ${w.shortMin}분 부족${adjust ? ' · 대표님이 조정 요청함' : ''}`
-        : s.nudgedAt ? `${this.ago(s.nudgedAt)} 다시 알림 · 대표님 아직 확인 안 함` : '등록됨 · 대표님 아직 확인 안 함';
+      const note = w ? `이동 시간 ${w.shortMin}분 부족${adjust ? ' · 영업사원이 조정 요청함' : ''}`
+        : s.nudgedAt ? `${this.ago(s.nudgedAt)} 다시 알림 · 영업사원 아직 확인 안 함` : '등록됨 · 영업사원 아직 확인 안 함';
       return `<li class="rv"><i class="rv-bar" style="background:${this.CAT_COLOR[s.category] || '#556274'}"></i>
         <div><b>${U.esc(s.title)} <small>· ${this.whenLabel(s)}</small></b><span class="${w ? 'warn-t' : ''}">${U.esc(note)}</span></div>
         ${w ? `<button class="btn line-signal" data-dayof="${s.date}">동선 고치기</button>` : ''}
-        <button class="btn ${s.nudgedAt && U.diffMin(new Date(), new Date(s.nudgedAt)) < 10 ? 'sent' : 'primary'}" data-nudge="${s.id}">${s.nudgedAt && U.diffMin(new Date(), new Date(s.nudgedAt)) < 10 ? `${Icon.svg('check', 14)} 다시 알렸어요` : '대표님께 다시 알리기'}</button>
+        <button class="btn ${s.nudgedAt && U.diffMin(new Date(), new Date(s.nudgedAt)) < 10 ? 'sent' : 'primary'}" data-nudge="${s.id}">${s.nudgedAt && U.diffMin(new Date(), new Date(s.nudgedAt)) < 10 ? `${Icon.svg('check', 14)} 다시 알렸어요` : '영업사원에게 다시 알리기'}</button>
         <button class="btn" data-open="${s.id}">열기</button></li>`;
     }).join('');
-    return `<div class="rv-head"><b>대표님 확인을 기다리는 일정 ${items.length}건</b><span>오늘 ${todayN} · 앞으로 ${items.length - todayN} · 대표님이 앱에서 '확인'을 누르면 사라져요</span></div>
-      <ul class="review">${rows}</ul><p class="rv-foot">'다시 알리기'는 대표님 비서톡에 일정 링크와 함께 가요</p>`;
+    return `<div class="rv-head"><b>영업사원 확인을 기다리는 일정 ${items.length}건</b><span>오늘 ${todayN} · 앞으로 ${items.length - todayN} · 영업사원이 앱에서 '확인'을 누르면 사라져요</span></div>
+      <ul class="review">${rows}</ul><p class="rv-foot">'다시 알리기'는 영업사원 세일즈톡에 일정 링크와 함께 가요</p>`;
   },
 
   async nudge(id) {
@@ -517,7 +517,7 @@ const Sec = {
     try {
       await Store.send(`'${s.title}' (${this.whenLabel(s)}) 일정 확인 부탁드려요.`, { ref: s.id });
       await Store.patch(s.id, { nudgedAt: new Date().toISOString() });
-      U.toast('대표님께 다시 알렸어요');
+      U.toast('영업사원에게 다시 알렸어요');
     } catch (err) { U.toast('보내지 못했어요: ' + (err.message || err)); }
   },
 
@@ -528,7 +528,7 @@ const Sec = {
       .filter(({ s }) => s.mode === 'driver' || (s.trip && s.trip.accessMode === 'driver'));
     const lines = plans.map(({ s, p: pl }) => `${U.hm(pl.driverCallAt || pl.leaveAt)} ${U.pickupLabel(s.origin || this.originFor(s.date, s.start, s.id)) || '본사'} 대기 → ${U.hm(pl.leaveAt)} 출발 · ${s.trip ? (s.trip.station || '역') : (s.location || '')} (${s.start} ${s.title})`);
     const link = CEOP_CONFIG.DRIVER_URL ? `\n배차표 · 대기/출발/도착 알리기: ${new URL(CEOP_CONFIG.DRIVER_URL, location.href).href}` : '';
-    const text = lines.length ? `[${this.dateShort(ymd)} 배차]\n${lines.join('\n')}${link}\n- ${p.secretaryName || '비서'}` : '';
+    const text = lines.length ? `[${this.dateShort(ymd)} 배차]\n${lines.join('\n')}${link}\n- ${p.secretaryName || '팀장'}` : '';
     const back = document.createElement('div');
     back.className = 'modal-back';
     back.innerHTML = `<div class="modal dispatch" role="dialog" aria-label="기사님께 배차 알림">
@@ -562,7 +562,7 @@ const Sec = {
     back.className = 'modal-back';
     back.innerHTML = `<div class="modal editor" role="dialog" aria-label="일정 등록">
       <div class="ed-head"><div><h3>${target.id ? '일정 수정' : '새 일정 등록'}</h3>
-        <p class="muted small">${target.id ? (s.ackAt ? '대표님이 확인한 일정이에요. 고치면 다시 확인을 받아요.' : '대표님이 아직 확인하지 않았어요.') : '등록하면 대표님 앱에 바로 표시돼요.'}</p></div>
+        <p class="muted small">${target.id ? (s.ackAt ? '영업사원이 확인한 일정이에요. 고치면 다시 확인을 받아요.' : '영업사원이 아직 확인하지 않았어요.') : '등록하면 영업사원 앱에 바로 표시돼요.'}</p></div>
         <button class="icon-btn" data-close aria-label="닫기">${Icon.svg('x', 18)}</button></div>
       <div class="ed-body">
       <form id="ef" class="ed-form" novalidate>
@@ -594,7 +594,7 @@ const Sec = {
           <label>역까지 수단<select name="accessMode">${opt({ driver: Backtime.MODES.driver, taxi: Backtime.MODES.taxi, car: Backtime.MODES.car }, t.accessMode || 'driver')}</select></label>
           <label>국제선<select name="intl"><option value="">아니오</option><option value="1" ${t.intl ? 'selected' : ''}>예</option></select></label>
         </fieldset>
-        <details class="full brief" ${hasBrief ? 'open' : ''}><summary>미팅 브리핑 (선택) · 대표님 앱에 일정 직전 표시</summary>
+        <details class="full brief" ${hasBrief ? 'open' : ''}><summary>미팅 브리핑 (선택) · 영업사원 앱에 일정 직전 표시</summary>
           <div class="brief-grid">
           <label><span id="whoLbl">만날 분</span><input name="who" value="${U.esc(b.who || '')}" placeholder="예: 정민호 부사장"></label>
           <label>회사 · 직함<input name="company" value="${U.esc(b.company || '')}"></label>
@@ -609,7 +609,7 @@ const Sec = {
       <aside class="ed-preview" id="preview"></aside>
       </div>
       <div class="ed-foot">${target.id ? '<button type="button" class="btn quiet" data-del>일정 삭제</button>' : ''}${target.id && s.category !== 'personal' && U.at(s.date, s.start) > new Date() ? '<button type="button" class="btn" data-invite>손님에게 초대장 보내기</button>' : ''}<span style="flex:1"></span>
-        <button type="button" class="btn" data-close>취소</button><button class="btn primary" form="ef">${target.id ? '저장하고 다시 확인 요청' : '등록하고 대표님께 보내기'}</button></div>
+        <button type="button" class="btn" data-close>취소</button><button class="btn primary" form="ef">${target.id ? '저장하고 다시 확인 요청' : '등록하고 영업사원에게 보내기'}</button></div>
     </div>`;
     const close = () => { if (this.dirty && !confirm('저장하지 않은 내용이 있어요. 닫을까요?')) return; this.edit = null; this.dirty = false; back.remove(); };
     back.addEventListener('click', e => { if (e.target === back) close(); });
@@ -715,7 +715,7 @@ const Sec = {
     const warns = [...Backtime.conflictsOn(all, s.date), ...Backtime.conflictsOn(all, U.addDays(s.date, 1))].filter(w => w.a === s || w.b === s);
     if (mine.p.warn) warns.unshift({ msg: mine.p.warn });
     const go = s.mode !== 'none';
-    const past = s.date && s.start && U.at(s.date, s.start) < new Date() && !(this.edit && this.edit.id) ? `<p class="pv-status">${Icon.svg('info', 15)} 이미 지난 시각이에요 — 기록용이면 그대로 저장하세요 (대표님 확인 대기에는 안 들어가요)</p>` : '';
+    const past = s.date && s.start && U.at(s.date, s.start) < new Date() && !(this.edit && this.edit.id) ? `<p class="pv-status">${Icon.svg('info', 15)} 이미 지난 시각이에요 — 기록용이면 그대로 저장하세요 (영업사원 확인 대기에는 안 들어가요)</p>` : '';
     const prevS = this.prevFor(s.date, s.start, s.id);
     const gapNote = prevS && this.gapMin(prevS, s.start) > 180 && s.origin !== prevS.location ? `<p class="pv-status">${Icon.svg('info', 15)} 앞 일정(${U.esc(prevS.location)})이 ${U.esc(prevS.end || prevS.start)}에 끝나고 시간이 많이 비어요 — 출발지(${U.esc(s.origin || '본사')})가 맞는지 확인해 주세요</p>` : '';
     const overnight = s.end && s.end < s.start ? `<p class="pv-status">${Icon.svg('clock', 15)} 다음 날 ${s.end}에 끝나는 일정으로 저장돼요</p>` : '';
@@ -723,7 +723,7 @@ const Sec = {
     const fresh = !(this.edit && this.edit.id) && !this.dirty;
     const status = fresh ? `<p class="pv-status">${Icon.svg('info', 15)} 날짜 · 시간 · 장소를 정하면 앞뒤 일정과 겹치는지 바로 알려 드려요</p>` : past + gapNote + overnight + (warns.length ? warns.map(w => `<p class="pv-status bad">${Icon.svg('alert', 15)} ${U.esc(w.msg)}</p>`).join('')
       : `<p class="pv-status ok">${Icon.svg('checkCircle', 15)} 같은 날 앞뒤 일정과 겹치지 않아요${s.mode === 'driver' ? ` · ${U.esc(Store.profile().driverName || '기사님')} 배차 가능` : ''}</p>`);
-    box.innerHTML = `<span class="pv-cap">대표님 앱에 이렇게 보여요</span>
+    box.innerHTML = `<span class="pv-cap">영업사원 앱에 이렇게 보여요</span>
       ${go ? `<span class="pv-cap">출발</span><b class="pv-big num">${U.hm(mine.p.leaveAt)}</b>` : `<span class="pv-cap">시작</span><b class="pv-big num">${s.start}</b>`}
       <ol class="pv">${mine.p.items.filter(it => it.kind !== 'end').map(it => `<li class="k-${it.kind}"><b class="num">${U.hm(it.at)}</b><span>${U.esc(it.title)}<small>${U.esc(it.detail || '')}</small></span></li>`).join('')}</ol>
       ${status}`;
@@ -742,14 +742,14 @@ const Sec = {
         const dates = Learn.repeatDates(s.date, rep, f.elements.repeatN.value);
         const series = U.uid();
         await Store.upsertMany(dates.map(d => ({ ...s, id: U.uid(), date: d, series })));
-        U.toast(`반복 일정 ${dates.length}건을 등록했어요. 대표님 앱에 표시돼요`);
+        U.toast(`반복 일정 ${dates.length}건을 등록했어요. 영업사원 앱에 표시돼요`);
         return true;
       }
       const later = s.series && f.elements.applySeries && f.elements.applySeries.checked
         ? Store.list().filter(x => x.series === s.series && x.date > s.date && x.status !== 'cancelled') : [];
       const same = ({ id, date, ackAt, nudgedAt, actual, createdBy, status, ...rest }) => rest;   // 날짜 · 확인 · 실제 기록은 그대로
       await Store.upsertMany([s, ...later.map(x => ({ ...x, ...same(s) }))]);
-      U.toast(this.edit.id ? `저장했어요${later.length ? ` (이후 반복 ${later.length}건 함께)` : ''}. 대표님께 다시 확인을 요청했어요` : '등록했어요. 대표님 앱에 표시돼요');
+      U.toast(this.edit.id ? `저장했어요${later.length ? ` (이후 반복 ${later.length}건 함께)` : ''}. 영업사원에게 다시 확인을 요청했어요` : '등록했어요. 영업사원 앱에 표시돼요');
       // 시간 · 날짜가 바뀌었으면 상대방에게 보낼 문자 초안
       const needDraft = before && (before.start !== s.start || before.date !== s.date) && s.briefing && s.briefing.who;
       // 손님께 초대장을 보낸 일정의 시각 · 장소가 바뀌었으면 '바뀐 초대장 보내기'를 바로 (손님 링크는 예전 값 그대로라서)
@@ -782,11 +782,11 @@ const Sec = {
       let html = '';
       const list = Store.list().filter(x => x.id !== s.id);
       const note = s.location ? Learn.placeNote(list, s.location) : null;
-      if (note && note.lastRating === 'bad') html += `<p class="rec-warn">${Icon.svg('alert', 14)} 지난번(${note.last.slice(5).replace('-', '/')}) 대표님 평가: <b>별로</b>였어요</p>`;
-      else if (note && note.lastRating) html += `<p class="rec-ok">${Icon.svg('checkCircle', 14)} 대표님 지난 평가: ${Learn.RATING[note.lastRating]} (${note.n}번 가 봄)</p>`;
+      if (note && note.lastRating === 'bad') html += `<p class="rec-warn">${Icon.svg('alert', 14)} 지난번(${note.last.slice(5).replace('-', '/')}) 영업사원 평가: <b>별로</b>였어요</p>`;
+      else if (note && note.lastRating) html += `<p class="rec-ok">${Icon.svg('checkCircle', 14)} 영업사원 지난 평가: ${Learn.RATING[note.lastRating]} (${note.n}번 가 봄)</p>`;
       if (s.category === 'dinner') {
         const picks = Learn.places(list, s.briefing || {}).filter(p => Learn.key(p.name) !== Learn.key(s.location));
-        if (picks.length) html += `<div class="rec-chips"><span class="lbl">대표님이 좋았다고 한 곳</span>${picks.map(p => `<button type="button" class="rec-chip" data-pickplace="${U.esc(p.name)}"><b>${U.esc(p.name)}</b><small>${p.withThem ? `${U.esc((p.withThem.who || p.withThem.company).split(' ')[0])}님과 ${p.withThem.date.slice(5).replace('-', '/')} · ` : ''}좋았어요 ${p.good}번</small></button>`).join('')}</div>`;
+        if (picks.length) html += `<div class="rec-chips"><span class="lbl">영업사원이 좋았다고 한 곳</span>${picks.map(p => `<button type="button" class="rec-chip" data-pickplace="${U.esc(p.name)}"><b>${U.esc(p.name)}</b><small>${p.withThem ? `${U.esc((p.withThem.who || p.withThem.company).split(' ')[0])}님과 ${p.withThem.date.slice(5).replace('-', '/')} · ` : ''}좋았어요 ${p.good}번</small></button>`).join('')}</div>`;
       }
       if (rec._html !== html) { rec.innerHTML = html; rec._html = html; }
       rec.hidden = !html;
@@ -855,7 +855,7 @@ const Sec = {
         if (s.briefing && s.briefing.who && U.at(s.date, s.start) > new Date()) setTimeout(() => this.openDraft(s, Drafts.cancel(s, Store.profile())), 50);
       } catch (err) { U.toast('삭제하지 못했어요: ' + (err.message || err)); }
     };
-    if (!later.length) { if (confirm('이 일정을 삭제할까요? 대표님 앱에서도 사라져요.')) finish([id]); return; }
+    if (!later.length) { if (confirm('이 일정을 삭제할까요? 영업사원 앱에서도 사라져요.')) finish([id]); return; }
     const back = document.createElement('div');
     back.className = 'modal-back';
     back.innerHTML = `<div class="modal choice" role="dialog" aria-label="반복 일정 삭제"><h3>반복 일정이에요</h3>
@@ -890,7 +890,7 @@ const Sec = {
   /** 손님께 마지막으로 보낸 초대장 내용 (이 브라우저 기준) */
   inviteSent(id) { try { return JSON.parse(localStorage.getItem('sp_inv_sent_' + id) || 'null'); } catch { return null; } },
 
-  /** 대표님 메시지(시간 변경 · 취소)에서 상대방 문자 초안 만들기 */
+  /** 영업사원 메시지(시간 변경 · 취소)에서 상대방 문자 초안 만들기 */
   draftFromMsg(m) {
     if (m.from !== 'ceo' || !m.ref) return null;
     const s = Store.get(m.ref);
@@ -903,7 +903,7 @@ const Sec = {
     return null;
   },
 
-  /** 대표님께 보낼 하루 브리핑 */
+  /** 영업사원에게 보낼 하루 브리핑 */
   briefText(ymd) {
     const p = Store.profile();
     const day = Backtime.planDay(Store.byDate(ymd).filter(s => s.status !== 'cancelled'), { prepMin: p.prepMin, commuteMin: p.commuteMin });
@@ -925,21 +925,21 @@ const Sec = {
     back.className = 'modal-back';
     const text = this.briefText(ymd);
     back.innerHTML = `<div class="modal dispatch" role="dialog" aria-label="브리핑 보내기">
-      <div class="ed-head"><div><h3>대표님께 브리핑 보내기</h3><p class="muted small">${sent ? `${this.dateShort(ymd)} 브리핑은 ${U.hm(new Date(sent.at))}에 이미 보냈어요 · 다시 보낼 수 있어요` : '대표님 앱 홈에 브리핑과 \'모두 확인\' 버튼이 떠요'}</p></div>
+      <div class="ed-head"><div><h3>영업사원에게 브리핑 보내기</h3><p class="muted small">${sent ? `${this.dateShort(ymd)} 브리핑은 ${U.hm(new Date(sent.at))}에 이미 보냈어요 · 다시 보낼 수 있어요` : '영업사원 앱 홈에 브리핑과 \'모두 확인\' 버튼이 떠요'}</p></div>
         <button class="icon-btn" data-close aria-label="닫기">${Icon.svg('x', 18)}</button></div>
       <div class="dp-body"><label class="dp-text">날짜<input type="date" id="brDate" value="${ymd}"></label>
         ${text ? `<label class="dp-text">보낼 내용<textarea id="brText" rows="${text.split('\n').length + 2}">${U.esc(text)}</textarea></label>` : '<p class="muted">이 날은 일정이 없어요.</p>'}</div>
-      <div class="ed-foot"><span style="flex:1"></span><button class="btn" data-close>닫기</button>${text ? `<button class="btn primary" data-send>${Icon.svg('send', 16)} 대표님께 보내기</button>` : ''}</div></div>`;
+      <div class="ed-foot"><span style="flex:1"></span><button class="btn" data-close>닫기</button>${text ? `<button class="btn primary" data-send>${Icon.svg('send', 16)} 영업사원에게 보내기</button>` : ''}</div></div>`;
     back.addEventListener('click', e => { if (e.target === back || e.target.closest('[data-close]')) back.remove(); });
     document.body.appendChild(back);
     back.querySelector('#brDate').addEventListener('change', e => { back.remove(); this.openBrief(e.target.value); });
     back.querySelector('[data-send]')?.addEventListener('click', async () => {
-      try { await Store.send(back.querySelector('#brText').value.trim(), { ref: 'brief:' + ymd }); back.remove(); U.toast('브리핑을 보냈어요. 대표님 앱 홈에 표시돼요'); }
+      try { await Store.send(back.querySelector('#brText').value.trim(), { ref: 'brief:' + ymd }); back.remove(); U.toast('브리핑을 보냈어요. 영업사원 앱 홈에 표시돼요'); }
       catch (err) { U.toast('보내지 못했어요: ' + (err.message || err)); }
     });
   },
 
-  // ───────── 비서톡 서랍 ─────────
+  // ───────── 세일즈톡 서랍 ─────────
   toggleChat(open) {
     this.chatOpen = open;
     const d = document.getElementById('drawer');
@@ -953,10 +953,10 @@ const Sec = {
     const msgs = Store.messages();
     this.seenMsgs = msgs.length; localStorage.setItem('CEOP_SEEN_SEC', String(msgs.length));
     const keep = d.querySelector('input')?.value || '';
-    d.innerHTML = `<div class="dr-head"><div><b>비서톡</b><small>${U.esc(Store.profile().name || '대표')}님과 대화</small></div>
+    d.innerHTML = `<div class="dr-head"><div><b>세일즈톡</b><small>${U.esc(Store.profile().name || '대표')}님과 대화</small></div>
         <button class="icon-btn" data-x aria-label="닫기">${Icon.svg('x', 18)}</button></div>
-      <div class="dr-msgs" id="drMsgs">${msgs.map(m => `<div class="m ${m.from === 'secretary' ? 'me' : 'them'} ${m.urgent ? 'urgent' : ''}">${m.urgent ? '<b>긴급</b> ' : ''}${U.esc(m.body)}${m.ref && m.from === 'ceo' && Store.get(m.ref) && !Store.get(m.ref).masked ? `<br><button class="ref" data-ref="${U.esc(m.ref)}">${Icon.svg('calendar', 13)} 일정 열기</button>` : ''}${this.draftFromMsg(m) ? `<br><button class="ref" data-draftmsg="${U.esc(m.id)}">${Icon.svg('sms', 13)} 상대방 문자 초안</button>` : ''}<small class="num">${m.from === 'ceo' ? '대표' : m.from === 'driver' ? U.esc(Store.profile().driverName || '기사') + '님' : '나'} · ${U.hm(new Date(m.at))}</small></div>`).join('') || '<p class="muted small">대표님 요청이 여기에 표시돼요.</p>'}</div>
-      <form class="dr-send" id="drSend"><input name="body" placeholder="대표님께 보낼 메시지" autocomplete="off"><button class="btn primary" aria-label="보내기">${Icon.svg('send', 16)}</button></form>`;
+      <div class="dr-msgs" id="drMsgs">${msgs.map(m => `<div class="m ${m.from === 'secretary' ? 'me' : 'them'} ${m.urgent ? 'urgent' : ''}">${m.urgent ? '<b>긴급</b> ' : ''}${U.esc(m.body)}${m.ref && m.from === 'ceo' && Store.get(m.ref) && !Store.get(m.ref).masked ? `<br><button class="ref" data-ref="${U.esc(m.ref)}">${Icon.svg('calendar', 13)} 일정 열기</button>` : ''}${this.draftFromMsg(m) ? `<br><button class="ref" data-draftmsg="${U.esc(m.id)}">${Icon.svg('sms', 13)} 상대방 문자 초안</button>` : ''}<small class="num">${m.from === 'ceo' ? '대표' : m.from === 'driver' ? U.esc(Store.profile().driverName || '기사') + '님' : '나'} · ${U.hm(new Date(m.at))}</small></div>`).join('') || '<p class="muted small">영업사원 요청이 여기에 표시돼요.</p>'}</div>
+      <form class="dr-send" id="drSend"><input name="body" placeholder="영업사원에게 보낼 메시지" autocomplete="off"><button class="btn primary" aria-label="보내기">${Icon.svg('send', 16)}</button></form>`;
     const box = d.querySelector('#drMsgs'); box.scrollTop = box.scrollHeight;
     const form = d.querySelector('#drSend');
     form.body.value = keep;

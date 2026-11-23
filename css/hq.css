@@ -63,3 +63,6 @@ body.hq { margin: 0; background: #f4f5f8; color: var(--ink); }
   .hq-stops-head { display: none; }
   .hq-stop { grid-template-columns: 1fr 1fr; }
 }
+/* 팀원 초대 */
+.hq-code { font: 700 34px/1.2 ui-monospace, Menlo, monospace; letter-spacing: 4px; text-align: center; padding: 18px; margin: 12px 0; border-radius: 14px; background: #faf6ec; color: #7a5a1c; border: 1px dashed #d9c08a; }
+.hq-invite { white-space: pre-wrap; font-family: inherit; font-size: 13px; line-height: 1.6; background: #f6f6f4; border-radius: 10px; padding: 10px 12px; margin: 10px 0; }
