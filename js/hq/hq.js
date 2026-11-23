@@ -21,7 +21,23 @@ const Hq = {
   },
 
   // ---------- 계산 ----------
-  tpl() { return Templates.get(HqStore.data.templateId || 'insurance'); },
+  tpl() { return Templates.get(HqStore.data.templateId, HqStore.pickedLabel()); },
+  noun() { return Templates.type(this.tpl()).noun; },
+
+  /** 회사 업종 고르기 (처음 · 바꾸기). 영업 방식 3가지로 묶어서 */
+  renderPick() {
+    const esc = U.esc, TY = Templates.TYPES;
+    document.getElementById('root').innerHTML = `
+      <div class="hq-pick">
+        <small class="hq-muted">SALES PLANNER · 본사</small>
+        <h1>우리 회사는 어떤 영업을 하나요?</h1>
+        <p class="hq-muted">고르면 상황판 숫자 · 진행 단계 · 팀원 앱 메뉴가 그 영업에 맞게 짜여요. 나중에 바꿀 수 있어요.</p>
+        ${Object.values(TY).map(ty => `<section class="hq-card"><h2>${esc(ty.name)} <span class="hq-muted">${esc(ty.desc)}</span></h2>
+          <div class="hq-indgrid">${Templates.list(ty.id).map(x => `<button class="hq-ind ${x.rep ? 'rep' : ''}" data-hq="pick" data-id="${x.id}"><b>${esc(x.name)}</b><small>${esc(x.stages.join(' → '))}</small></button>`).join('')}
+          <button class="hq-ind" data-hq="pickcustom" data-type="${ty.id}"><b>그 밖의 ${esc(ty.short)} 영업</b><small>업종 이름을 직접 적어요</small></button></div></section>`).join('')}
+        ${HqStore.data && HqStore.data.templateId ? '<button class="hq-btn" data-hq="cancelpick">바꾸지 않고 돌아가기</button>' : ''}
+      </div>`;
+  },
   now() { return new Date(); },
   todayOf(repId) { return HqStore.data.schedules.filter(s => s.repId === repId && s.date === U.today() && s.status !== 'cancelled' && s.category === 'external').sort((a, b) => a.start.localeCompare(b.start)); },
   doneOf(list) { const n = this.now(); return list.filter(s => U.at(s.date, s.end) <= n); },
@@ -47,6 +63,7 @@ const Hq = {
 
   // ---------- 화면 ----------
   render() {
+    if (!HqStore.data.templateId || this.picking) return this.renderPick();
     const d = HqStore.data, t = this.tpl(), esc = U.esc;
     const reps = d.reps;
     const todayAll = reps.flatMap(r => this.todayOf(r.id)), done = this.doneOf(todayAll);
@@ -56,29 +73,29 @@ const Hq = {
     const actLine = a => a.kind === 'stage' ? `${esc(a.body.from || '처음')} → <b>${esc(a.body.to)}</b>` : a.kind === 'call' ? `통화 ${a.body.minutes || ''}분${a.body.result ? ' · ' + (RES[a.body.result] || '') : ''}` : esc(a.body.text || a.kind);
     const longDate = (() => { const x = this.now(); return `${x.getMonth() + 1}월 ${x.getDate()}일 ${U.WEEK[x.getDay()]}요일 · ${U.hm(x)} 기준`; })();
     document.getElementById('root').innerHTML = `
-      ${Store.mode === 'demo' ? `<div class="hq-demo">데모 화면이에요 — 가상 팀 5명 · 가상 고객 30명.${Store.forcedDemo ? ' <button data-hq="exitdemo">데모 끝내기</button>' : ''}</div>` : ''}
+      ${Store.mode === 'demo' ? `<div class="hq-demo">데모 화면이에요 — 가상 팀 5명 · 가상 ${this.noun()} 30곳.${Store.forcedDemo ? ' <button data-hq="exitdemo">데모 끝내기</button>' : ''}</div>` : ''}
       ${HqStore.error ? `<div class="hq-demo hq-err">일부를 불러오지 못했어요: ${esc(HqStore.error)}</div>` : ''}
       <div class="hq-shell">
         <aside class="hq-side">
           <div class="hq-brand"><small>SALES PLANNER</small><b>본사 · 팀장</b></div>
           <nav aria-label="관리 메뉴">
             <a class="on" href="#">오늘 현황</a>
-            <a href="#" data-hq="assign">고객 배정</a>
+            <a href="#" data-hq="assign">${this.noun()} 배정</a>
             <a href="#" data-hq="route">방문 루트 보내기</a>
             <a href="#" data-hq="invite">팀원 초대 (회사 코드)</a>
             <a href="secretary.html">세일즈톡 · 일정 (기존 화면)</a>
           </nav>
-          <p class="hq-tpl">${esc(t.name)} 템플릿 · 성과 단계 '${esc(Templates.winStage(t))}'</p>
+          <p class="hq-tpl">${esc(Templates.type(t).name)} · <b>${esc(t.name)}</b><br>성과 단계 '${esc(Templates.winStage(t))}' · <a href="#" data-hq="changeind">업종 바꾸기</a></p>
         </aside>
         <main class="hq-main">
           <div class="hq-head">
             <div><div class="hq-muted">${esc(longDate)}</div><h1>오늘 현황</h1></div>
-            <div class="hq-btns"><button class="hq-btn" data-hq="invite">팀원 초대</button><button class="hq-btn" data-hq="assign">고객 배정</button><button class="hq-btn hq-dark" data-hq="route">방문 루트 보내기</button></div>
+            <div class="hq-btns"><button class="hq-btn" data-hq="invite">팀원 초대</button><button class="hq-btn" data-hq="assign">${this.noun()} 배정</button><button class="hq-btn hq-dark" data-hq="route">방문 루트 보내기</button></div>
           </div>
           <div class="hq-kpis">
             <div class="hq-kpi dark"><span>오늘 방문</span><b>${done.length} / ${todayAll.length}</b><small>끝남 / 계획</small></div>
             <div class="hq-kpi"><span>이번 달 성과</span><b>${this.monthWins()}</b><small>'${esc(Templates.winStage(t))}' 단계 도달</small></div>
-            <div class="hq-kpi"><span>다시 연락 지연</span><b>${od.length}</b><small>날짜가 지난 고객</small></div>
+            <div class="hq-kpi"><span>다시 연락 지연</span><b>${od.length}</b><small>날짜가 지난 ${this.noun()}</small></div>
             <div class="hq-kpi"><span>루트 확인 대기</span><b>${pend.length}</b><small>보냈는데 아직 확인 안 함</small></div>
           </div>
           <div class="hq-cols">
@@ -93,7 +110,7 @@ const Hq = {
               </table></div>
             </section>
             <section class="hq-card">
-              <h2>진행 단계 전체 <span class="hq-muted">고객 ${d.customers.length}명</span></h2>
+              <h2>진행 단계 전체 <span class="hq-muted">${this.noun()} ${d.customers.length}곳</span></h2>
               ${t.stages.map((s, i) => `<div class="hq-bar"><span>${esc(s)}</span><i><u style="width:${Math.round(counts[i] / maxC * 100)}%"></u></i><b>${counts[i]}</b></div>`).join('')}
             </section>
           </div>
@@ -119,9 +136,9 @@ const Hq = {
   openAssign() {
     const t = this.tpl();
     if (!HqStore.data.reps.length) return U.toast('배정할 영업사원이 아직 없어요');
-    const m = this.modal(`<h2>고객 배정</h2><p class="hq-muted">배정하면 회사 고객이 돼요. 영업사원이 퇴사해도 회사에 남아요. 다음 날 첫 연락 알림이 자동으로 잡혀요.</p>
+    const m = this.modal(`<h2>${this.noun()} 배정</h2><p class="hq-muted">배정하면 회사 ${this.noun()}이 돼요. 영업사원이 퇴사해도 회사에 남아요. 다음 날 첫 연락 알림이 자동으로 잡혀요.</p>
       <form><label>담당 영업사원<select name="rep">${this.repOptions()}</select></label>
-      <label>고객 이름<input name="name" required maxlength="40"></label>
+      <label>${this.noun()} 이름<input name="name" required maxlength="40"></label>
       <label>연락처<input name="phone" inputmode="tel" maxlength="20"></label>
       <label>시작 단계<select name="stage">${t.stages.map(s => `<option>${U.esc(s)}</option>`).join('')}</select></label>
       <div class="hq-foot"><button type="button" class="hq-btn" data-hq="close">취소</button><button class="hq-btn hq-dark">배정</button></div></form>`);
@@ -140,7 +157,7 @@ const Hq = {
       <input name="loc" placeholder="장소" aria-label="장소" maxlength="80"><input name="tm" type="number" min="0" max="300" value="20" aria-label="이동 분"></div>`;
     const m = this.modal(`<h2>방문 루트 보내기</h2><p class="hq-muted">보내면 영업사원 앱 홈에 '확인 대기'로 가고, 출발 알람이 자동으로 잡혀요.</p>
       <form><div class="hq-two"><label>영업사원<select name="rep">${this.repOptions(rep)}</select></label><label>날짜<input name="date" type="date" required value="${U.addDays(U.today(), 1)}"></label></div>
-      <div class="hq-stops-head"><span>시간</span><span>고객</span><span>장소</span><span>이동(분)</span></div>
+      <div class="hq-stops-head"><span>시간</span><span>${this.noun()}</span><span>장소</span><span>이동(분)</span></div>
       <div class="hq-stops">${row(0)}${row(1)}${row(2)}</div>
       <button type="button" class="hq-btn" data-addstop>+ 한 곳 더</button>
       <div class="hq-foot"><button type="button" class="hq-btn" data-hq="close">취소</button><button class="hq-btn hq-dark">루트 보내기</button></div></form>`);
@@ -151,7 +168,7 @@ const Hq = {
       e.preventDefault(); const f = e.target;
       const stops = [...box.children].map(r => ({ start: r.querySelector('[name=start]').value, customerId: r.querySelector('[name=cust]').value, location: r.querySelector('[name=loc]').value.trim(), travelMin: r.querySelector('[name=tm]').value }))
         .filter(s => s.start && s.customerId);
-      if (!stops.length) return U.toast('이 영업사원에게 배정된 고객이 없어요. 먼저 고객을 배정해 주세요');
+      if (!stops.length) return U.toast(`이 영업사원에게 배정된 ${this.noun()}이 없어요. 먼저 배정해 주세요`);
       try { await HqStore.sendRoute(f.rep.value, f.date.value, stops); this.close(); this.render(); U.toast(`${this.repName(f.rep.value)}님에게 ${stops.length}곳 루트를 보냈어요`); }
       catch (err) { U.toast(err.message); }
     };
@@ -185,6 +202,15 @@ const Hq = {
     if (k === 'assign') this.openAssign();
     else if (k === 'route') this.openRoute();
     else if (k === 'invite') this.openInvite();
+    else if (k === 'changeind') { this.picking = true; this.render(); }
+    else if (k === 'cancelpick') { this.picking = false; this.render(); }
+    else if (k === 'pick' || k === 'pickcustom') {
+      let label = null;
+      if (k === 'pickcustom') { label = (prompt('업종 이름을 적어 주세요 (예: 사무용품 납품)') || '').trim(); if (!label) return; }
+      const id = k === 'pick' ? el.dataset.id : 'gen-' + el.dataset.type;
+      HqStore.setTemplate(id, label); this.picking = false;
+      HqStore.load().then(() => { this.render(); U.toast(`'${this.tpl().name}' 업종으로 바꿨어요`); });
+    }
     else if (k === 'close') this.close();
     else if (k === 'exitdemo') Store.exitDemo();
   },

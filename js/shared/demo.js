@@ -44,8 +44,30 @@ const Demo = {
       meal(11, '대한건설 오찬', '청담 스시 오마카세', 'bad', { who: '윤태식 회장', company: '대한건설' }),
       meal(7, '한빛전자 점심', '광화문 한정식 소담', 'good', { who: '정민호 부사장', company: '한빛전자' }),
       meal(5, '협력사 점심', '여의도 중식당 루이', 'ok', { who: '박지훈 대표', company: '루이테크' }),
-      meal(2, '이사회 오찬', '삼청동 이탈리안 산마리노', 'good', { who: '사외이사 3명', company: '' }),
+      meal(2, '팀 점심', '삼청동 이탈리안 산마리노', 'good', { who: '팀원 4명', company: '' }),
     ];
+  },
+
+  /** 고른 업종의 데모 하루: 그 업종 예시 고객을 실제로 찾아가는 일정 (이름 · 장소는 모두 가상)
+   *  route(순회형)는 짧게 여러 곳, 나머지는 길게 세 곳 */
+  dayFor(t, customers, type) {
+    const td = U.today(), d1 = U.addDays(td, 1), now = new Date().toISOString();
+    const S = o => ({ id: U.uid(), visibility: 'normal', bufferMin: 10, status: 'scheduled', ackAt: now, briefing: {}, createdBy: 'secretary', demoDay: true, category: 'external', mode: 'car', travelMin: 15, ...o });
+    const PLACES = ['왕십리역 카페', '성수동 사무실', '뚝섬역 근처', '건대입구 사무실', '성수 지점 3층'];
+    const visit = (Templates.word(t, 'visit') || '방문');
+    const win = Templates.winStage(t);
+    const pick = customers.filter(c => c.stage !== win).concat(customers.filter(c => c.stage === win));
+    const slots = type === 'route' ? [['09:40', '10:20'], ['11:00', '11:40'], ['13:30', '14:10'], ['15:00', '15:40'], ['16:30', '17:10']] : [['10:30', '11:30'], ['14:00', '15:00'], ['17:30', '18:20']];
+    const out = [S({ title: type === 'route' ? '아침 출고 · 물량 확인' : '아침 팀 회의', category: 'meeting', date: td, start: '08:30', end: '09:10', location: '성수 지점 3층', mode: 'none' })];
+    slots.forEach(([a, b], i) => {
+      const c = pick[i]; if (!c) return;
+      const order = type === 'route', f = c.fields || {};
+      out.push(S({ title: `${c.name} ${order ? '정기 방문' : visit}`, date: td, start: a, end: b, location: c.address || PLACES[i % PLACES.length], mode: i === 2 && !order ? 'walk' : 'car',
+        briefing: { who: c.name, customerId: c.id, purpose: order ? `주문 받기${f.items ? ' · ' + f.items : ''}` : `${c.stage} 단계 이어 가기`, notes: f.unpaid ? `미수금 ${f.unpaid}만 원 확인` : '', bring: order ? '주문서 · 단가표' : '자료' } }));
+    });
+    const c4 = pick[slots.length];
+    if (c4) out.push(S({ title: `${c4.name} ${visit}`, date: d1, start: '11:00', end: '11:40', location: c4.address || '건대입구 사무실', briefing: { who: c4.name, customerId: c4.id, purpose: `${c4.stage} 단계 이어 가기` } }));
+    return out;
   },
 
   build() {
@@ -54,23 +76,15 @@ const Demo = {
     return {
       profile: { name: '박지훈', prepMin: 50, ceoPhone: '010-0000-0000', secretaryName: '이팀장', secretaryPhone: '010-0000-0001', driverName: '', driverPhone: '' },
       schedules: [
-        // 세일즈플래너 데모: 보험 영업사원의 하루 (이름 · 장소는 모두 가상)
-        S({ title: '지점 아침 회의', category: 'meeting', date: t, start: '08:30', end: '09:10', location: '성수 지점 3층', mode: 'none', ackAt: new Date().toISOString() }),
-        S({ title: '오태민 고객 실손 상담', category: 'external', date: t, start: '10:30', end: '11:30', location: '왕십리역 카페', mode: 'car', travelMin: 20, ackAt: new Date().toISOString(),
-            briefing: { who: '오태민 고객님', purpose: '실손 리모델링 상담', notes: '지난주 통화: 보험료 부담 크다고 함', bring: '비교표 2부' } }),
-        S({ title: '남궁진 고객 설계안 설명', category: 'external', date: t, start: '14:00', end: '15:00', location: '성수동 사무실', mode: 'car', travelMin: 15, ackAt: new Date().toISOString(),
-            briefing: { who: '남궁진 고객님', purpose: '정기보험 전환 설계안 2가지', notes: '월 30만 원 이하 희망', bring: '설계안 출력본' } }),
-        S({ title: '류하나 고객 첫 인사', category: 'external', date: t, start: '17:30', end: '18:20', location: '뚝섬역 근처', mode: 'walk', travelMin: 15, ackAt: new Date().toISOString(),
-            briefing: { who: '류하나 고객님', purpose: '남궁진 고객 소개 · 첫 상담', bring: '명함' } }),
-        S({ title: '윤보람 고객 가입 1개월 안부', category: 'external', date: d1, start: '11:00', end: '11:40', location: '건대입구 사무실', mode: 'car', travelMin: 25, ackAt: new Date().toISOString(),
-            briefing: { who: '윤보람 고객님', purpose: '운전자보험 가입 후 안부' } }),
+        // 세일즈플래너 데모: 업종을 고르기 전 기본 하루 (업종을 고르면 App.demoRetheme 이 그 업종의 하루로 바꿈)
+        S({ demoDay: true, title: '아침 팀 회의', category: 'meeting', date: t, start: '08:30', end: '09:10', location: '성수 지점 3층', mode: 'none', ackAt: new Date().toISOString() }),
         // 지난 기록 (학습 · 추천 시연용): 본사 → 한빛전자 실제 이동 40·45·41분, 식사 장소 평가
         ...this.history(t, S),
       ],
       company: this.company(),
       notices: this.notices(),
       messages: [
-        { id: U.uid(), from: 'secretary', body: '지훈님, 이번 주 신규 배정 고객 2명은 고객 탭에 넣어 뒀어요. 오늘 남궁진 고객님 설계안 설명 잘 부탁해요.', urgent: false, at: new Date(Date.now() - 3600e3).toISOString() },
+        { id: U.uid(), from: 'secretary', body: '지훈님, 오늘 방문 일정 확인 부탁해요. 끝나면 마감 보고 보내 주세요.', urgent: false, at: new Date(Date.now() - 3600e3).toISOString() },
       ],
     };
   },

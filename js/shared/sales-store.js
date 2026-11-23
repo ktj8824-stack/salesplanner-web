@@ -47,16 +47,18 @@ const SalesStore = {
       c.from('sp_activities').select('*').eq('rep_id', this.me()).order('created_at', { ascending: false }).limit(300),
     ]);
     if (cu.error || ac.error) { this.error = (cu.error || ac.error).message; this.loaded = true; return; }
-    this.data = { templateId: (Store.profile() || {}).templateId || null, customers: cu.data.map(r => this.fromRow(r)),
+    this.data = { templateId: (Store.profile() || {}).templateId || null, industryName: (Store.profile() || {}).industryName || null, customers: cu.data.map(r => this.fromRow(r)),
       activities: ac.data.map(a => this.actFromRow(a)), seeded: {} };
     this.loaded = true;
   },
 
   _saveLocal() { if (!this.live()) { try { localStorage.setItem(this.KEY, JSON.stringify(this.data)); } catch { /* 저장소 막힘 */ } } },
 
-  async setTemplate(id) {
+  /** 업종 정하기. label: '직접 만들기'로 적은 업종 이름 (기본 업종이면 null) */
+  async setTemplate(id, label) {
     this.data.templateId = id;
-    if (this.live()) await Store.saveProfile({ templateId: id });
+    this.data.industryName = label ? String(label).trim().slice(0, 20) : null;
+    if (this.live()) await Store.saveProfile({ templateId: id, industryName: this.data.industryName });
     else this._saveLocal();
   },
 
