@@ -22,6 +22,7 @@ const Hq = {
 
   // ---------- 계산 ----------
   tpl() { return Templates.get(HqStore.data.templateId, HqStore.pickedLabel()); },
+  feat(k) { return !!(window.CEOP_CONFIG && CEOP_CONFIG.FEATURES && CEOP_CONFIG.FEATURES[k]); },
   noun() { return Templates.type(this.tpl()).noun; },
 
   /** 회사 업종 고르기 (처음 · 바꾸기). 영업 방식 3가지로 묶어서 */
@@ -82,7 +83,7 @@ const Hq = {
             <a class="on" href="#">오늘 현황</a>
             <a href="#" data-hq="assign">${this.noun()} 배정</a>
             <a href="#" data-hq="route">방문 루트 보내기</a>
-            <a href="#" data-hq="invite">팀원 초대 (회사 코드)</a>
+            ${this.feat('signup') ? '<a href="#" data-hq="invite">팀원 초대 (회사 코드)</a>' : ''}
             <a href="secretary.html">세일즈톡 · 일정 (기존 화면)</a>
           </nav>
           <p class="hq-tpl">${esc(Templates.type(t).name)} · <b>${esc(t.name)}</b><br>성과 단계 '${esc(Templates.winStage(t))}' · <a href="#" data-hq="changeind">업종 바꾸기</a></p>
@@ -90,7 +91,7 @@ const Hq = {
         <main class="hq-main">
           <div class="hq-head">
             <div><div class="hq-muted">${esc(longDate)}</div><h1>오늘 현황</h1></div>
-            <div class="hq-btns"><button class="hq-btn" data-hq="invite">팀원 초대</button><button class="hq-btn" data-hq="assign">${this.noun()} 배정</button><button class="hq-btn hq-dark" data-hq="route">방문 루트 보내기</button></div>
+            <div class="hq-btns">${this.feat('signup') ? '<button class="hq-btn" data-hq="invite">팀원 초대</button>' : ''}<button class="hq-btn" data-hq="assign">${this.noun()} 배정</button><button class="hq-btn hq-dark" data-hq="route">방문 루트 보내기</button></div>
           </div>
           <div class="hq-kpis">
             <div class="hq-kpi dark"><span>오늘 방문</span><b>${done.length} / ${todayAll.length}</b><small>끝남 / 계획</small></div>

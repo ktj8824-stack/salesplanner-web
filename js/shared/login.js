@@ -7,6 +7,7 @@ const Login = {
     this._title = title; this._done = onDone;
     if (Store.loginError) return this.renderId(root, title, onDone);   // 로그인 문제는 바로 아이디 화면에서 안내
     const chev = Icon.svg('chevron', 18), app = Store.role !== 'secretary';
+    const canJoin = !!(window.CEOP_CONFIG && CEOP_CONFIG.FEATURES && CEOP_CONFIG.FEATURES.signup);
     const trial = Plan.isFree() ? Plan.FREE_TEXT : Plan.PRICES.trialDays + '일 무료 체험';
     root.innerHTML = `
       <div class="auth auth-start">
@@ -21,7 +22,7 @@ const Login = {
             <span class="ico">${Icon.svg('building', 24)}</span>
             <span class="t"><b>아이디가 있어요</b><small>가입한 아이디로 로그인</small></span>${chev}
           </button>
-          ${app ? `
+          ${!canJoin ? '' : app ? `
           <button type="button" class="auth-card" data-join>
             <span class="ico brass">${Icon.svg('users', 24)}</span>
             <span class="t"><b>회사 코드로 시작</b><small>팀장님께 받은 8자리 코드로 가입</small></span>${chev}
@@ -63,12 +64,12 @@ const Login = {
           <button class="auth-primary" type="submit">로그인</button>
         </form>
         <div class="auth-note">${Icon.svg('info', 20)}<p>아이디나 비밀번호를 잊으셨다면 ${app ? '<b>팀장님</b>께 재설정을 요청해 주세요. 혼자 쓰시는 분은 고객센터로 문의해 주세요.' : '같은 회사의 <b>다른 팀장 · 본사 담당자</b>에게 재설정을 요청해 주세요.'}</p></div>
-        <p class="auth-switch">처음이세요? <button type="button" data-signup>${app ? '회사 코드로 시작' : '회사 등록하기'}</button></p>
+        ${(window.CEOP_CONFIG && CEOP_CONFIG.FEATURES && CEOP_CONFIG.FEATURES.signup) ? `<p class="auth-switch">처음이세요? <button type="button" data-signup>${app ? '회사 코드로 시작' : '회사 등록하기'}</button></p>` : ''}
       </div>`;
     Store.loginError = null;
     const f = root.querySelector('#loginForm');
     root.querySelector('[data-back]').addEventListener('click', () => this.render(root, title, onDone));
-    root.querySelector('[data-signup]').addEventListener('click', () => app ? this.renderJoin(root, title, onDone, 'code') : this.renderSignup(root, title, onDone));
+    const su = root.querySelector('[data-signup]'); if (su) su.addEventListener('click', () => app ? this.renderJoin(root, title, onDone, 'code') : this.renderSignup(root, title, onDone));
     f.addEventListener('submit', async e => {
       e.preventDefault();
       const btn = f.querySelector('button[type=submit]');

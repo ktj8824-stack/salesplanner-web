@@ -23,5 +23,12 @@
     APP_URL: isDev ? './index.html' : APP,
     SECRETARY_URL: isDev ? DEV_SECRETARY : WEB,
     DRIVER_URL: isDev ? DEV_DRIVER : APP + 'driver.html',   // 배차 문자에 넣는 기사님 화면 주소
+    // 기능 스위치 — 서버가 아직 안 올라간 기능은 꺼 두어 화면에 안 보이게 (스토어 심사: 안 되는 버튼이 없어야 함)
+    // 서버 작업(sp-account · sp_join_codes · sp-message-draft) 뒤에 true 로 바꾸면 바로 켜져요
+    FEATURES: Object.freeze({
+      signup: false,      // 앱: 회사 코드로 시작 · 혼자 쓰기 / 웹: 회사 등록 · 팀원 초대
+      aiDraft: false,     // 메시지 초안을 서버 AI로 (끄면 폰 안 기본 초안)
+      adMessage: false,   // 광고 메시지 · 광고 수신 동의 칸 (2단계에서)
+    }),
   });
 })();
