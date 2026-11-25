@@ -176,3 +176,7 @@ body.sec .auth-start::before { height: 44vh; }
 .auth-code { font-family: ui-monospace, Menlo, monospace; letter-spacing: 3px; text-transform: uppercase; }
 input.auth-code { font-size: 20px; text-align: center; }
 .empty-note { margin: 24px 16px; padding: 20px; border-radius: 16px; background: var(--card, #fff); text-align: center; line-height: 1.6; }
+/* 옆으로 밀리는 화면 막기 (넘치는 칸이 있어도 화면 폭은 그대로) */
+html, body { overflow-x: clip; }
+/* 상태 표시줄 칸: 아이폰(iOS 26)이 맨 위에 덮는 흐릿한 막이 밝은 바탕색을 따라 하얗게 보이지 않게, 남색으로 고정 */
+.statusbar-cover { position: fixed; top: 0; left: 0; right: 0; height: var(--sat, env(safe-area-inset-top)); background: #0F1B2D; z-index: 400; pointer-events: none; }
