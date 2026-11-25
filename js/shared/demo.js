@@ -57,8 +57,8 @@ const Demo = {
     const visit = (Templates.word(t, 'visit') || '방문');
     const win = Templates.winStage(t);
     const pick = customers.filter(c => c.stage !== win).concat(customers.filter(c => c.stage === win));
-    const slots = type === 'route' ? [['09:40', '10:20'], ['11:00', '11:40'], ['13:30', '14:10'], ['15:00', '15:40'], ['16:30', '17:10']] : [['10:30', '11:30'], ['14:00', '15:00'], ['17:30', '18:20']];
-    const out = [S({ title: type === 'route' ? '아침 출고 · 물량 확인' : '아침 팀 회의', category: 'meeting', date: td, start: '08:30', end: '09:10', location: '성수 지점 3층', mode: 'none' })];
+    const slots = type === 'route' ? [['09:30', '10:10'], ['11:00', '11:40'], ['13:30', '14:10'], ['15:00', '15:40'], ['16:30', '17:10']] : [['10:30', '11:30'], ['14:00', '15:00'], ['17:30', '18:20']];
+    const out = [S({ title: type === 'route' ? '아침 출고 · 물량 확인' : '아침 팀 회의', category: 'meeting', date: td, start: type === 'route' ? '08:00' : '08:30', end: type === 'route' ? '08:40' : '09:10', location: '성수 지점 3층', mode: 'none' })];
     slots.forEach(([a, b], i) => {
       const c = pick[i]; if (!c) return;
       const order = type === 'route', f = c.fields || {};
